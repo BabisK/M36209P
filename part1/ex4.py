@@ -26,26 +26,32 @@ def main():
     bigrams = [gram for gram in ngrams(train, 2)]
     trigrams = [gram for gram in ngrams(train, 3)]
 
-    # Calculate models using laplace smoothing based on bigrams and trigrams
+    # Calculate the conditional frequency distributions for bigrams and trigrams
     #bigrams_laplace = LaplaceProbDist(FreqDist(bigrams))
     #trigrams_laplace = LaplaceProbDist(FreqDist(trigrams))
-    bigrams_laplace = ConditionalFreqDist(bigrams)
-    trigrams_laplace = ConditionalFreqDist([((f,s), t) for f,s,t in trigrams])
+    bigrams_fd = ConditionalFreqDist(bigrams)
+    trigrams_fd = ConditionalFreqDist([((f,s), t) for f,s,t in trigrams])
 
-    cpd = ConditionalProbDist(bigrams_laplace, LaplaceProbDist)
+    # Calculate the conditional probability distributions for bigrams and trigrams
+    cpd_bigram = ConditionalProbDist(bigrams_fd, LaplaceProbDist)
+    cpd_trigram = ConditionalProbDist(trigrams_fd, LaplaceProbDist)
 
-    start, end = -1
-    for i, t in enumerate(test):
+    start, end = -1, -1
+    for i, t in enumerate(train):
         if t == ".":
             if start == -1:
                 start = i + 1
             else:
                 end = i
+                break
 
     test_bigrams = [gram for gram in ngrams(test[start:end], 2)]
     test_trigrams = [gram for gram in ngrams(test[start:end], 3)]
 
-    print(len(set(english.words())))
+    logprob_bi = [cpd_bigram[w1].logprob(w2) for w1, w2 in test_bigrams]
+    logprob_bi = sum(logprob_bi)
+
+    print(2**logprob_bi)
 
 
 if __name__ == "__main__":
