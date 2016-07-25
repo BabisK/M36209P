@@ -90,3 +90,11 @@ ENV/
 
 # PyCharm
 .idea/
+
+tmp/
+*.pdf
+*.synctex.gz
+.project
+.texlipse
+tmp/
+*.png
