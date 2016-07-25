@@ -17,7 +17,8 @@ def predict_word(probability_distribution, sentence, model):
         gram = tuple(tokens[-1:], )
     elif model == 'trigram':
         gram = tuple(tokens[-2:])
-    pd = [word[0] for word in probability_distribution[gram].freqdist().most_common() if word[0] != '<unknown>']
+    pd = [word[0] for word in probability_distribution[gram].freqdist().most_common() if
+          (word[0] != '<unknown>' and word[0] != 'end0' and word[0] != 'end1' and word[0] != '.')]
     return (pd[0] if len(pd) > 0 else None)
 
 
@@ -32,7 +33,7 @@ def centropy_perplexity(probability_distribution, ngrams):
 def ngrams_sentences(sentences, n):
     ngrams_serntences = []
     for sentence in sentences:
-        for i in range(n-1):
+        for i in range(n - 1):
             sentence = ['start{}'.format(i)] + sentence + ['end{}'.format(i)]
         ngrams_serntences.append([gram for gram in ngrams(sentence, n)])
     return ngrams_serntences
@@ -133,26 +134,26 @@ def main():
     plt.legend((bigram, trigram, random_bigram, random_trigram),
                ('Bigram', 'Trigram', 'Random bigram', 'Random trigram'))
     plt.ylim(ymin=0)
-    #plt.show()
+    # plt.show()
     plt.savefig('logprob')
 
     seed = 'this'
-    for i in range(10):
+    for i in range(30):
         newword = predict_word(cpd_bigram, seed, 'bigram')
         if newword != None:
             seed += ' ' + newword
         else:
             break
-    print('Given the seed word "this", the bigram model produced this text of length 10: {}'.format(seed))
+    print('Given the seed word "this", the bigram model produced this text of length 30: {}'.format(seed))
 
     seed = 'this'
-    for i in range(10):
+    for i in range(30):
         newword = predict_word(cpd_trigram, seed, 'trigram')
         if newword != None:
             seed += ' ' + newword
         else:
             break
-    print('Given the seed word "this", the trigram model produced this text of length 10: {}'.format(seed))
+    print('Given the seed word "this", the trigram model produced this text of length 30: {}'.format(seed))
 
     test_bigrams = []
     for sentence in bigrams_test:

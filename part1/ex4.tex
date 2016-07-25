@@ -1,0 +1,169 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass[a4paper]{article}
+\usepackage{a4wide}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{listings}
+
+\begin{document}
+
+\title{Exercises on n-gram language models, spelling correction, text normalization}
+\author{Charalampos Kaidos}
+
+\maketitle
+
+\section*{Exercise 4}
+
+We have used the NLTK toolkit to create the language models. Two models were
+created, a bigram and a trigram model. Both models are created using the Markov
+assumption; that the probability of a word appearing in a document depends on
+the $n-1$ words preceding it. Thus the probability of a sequence of $k$ words is
+the product of the probability of each word apearing with the n-gram model. For
+a bigram model that is:
+$$
+P(w_1^k) = P(w_1|start)P(w_2|w_1)P(w_3|w_2)\ldots P(w_k|w_{k-1})
+$$
+While for the trigram model:
+$$
+P(w_1^k) =
+P(w_1|start0,start1)P(w_2|w_1,start0)P(w_3|w_2,w_1)\ldotsP(w_k|w_{k-1},w_{k-2})
+$$ 
+
+To calculate the conditional probability of each word we use Laplace smoothing.
+This accounts for n-grams that may not appear on the training corpus. For a
+bigram model this is calculated this way:
+$$
+P(w_k|w_{k-1}) = \frac{count(w_k,w_{k-1}) + 1}{count(w_{k-1}) + |V|}
+$$
+While for the trigram model:
+$$
+P(w_k|w_{k-1},w_{k-2}) = \frac{count(w_k,w_{k-1},w_{k-2}) +
+1}{count(w_{k-1},w_{k-2}) + |V|}
+$$
+where $|V|$ is the size of the vocabulary on the corpus.
+
+Using the NLTK toolking we download the Europarl data set. This is a
+multilanguage data set created from transcripts of the European Parliament. We
+used the english transcripts. The data set comes tokenized both on sentences and
+on words. We did 3 stages of preprocessing to the data. First we transformed all
+letters to lower case to avoid having different tokens for same words if they
+happen to be on the beggining of a sentence. Second, we created 4 extra
+stop-words to signify the begining and ending of each sentence. For example
+the sentence ``please rise, then, for this minute's silence.'' becomes
+``start1 start0 please rise, then, for this minute's silence. end0 end1''.
+Finally we have removed all words that appear less than 10 times in the corpus
+and replaced them with the pseudoword ``<unknown>''.
+
+We used 80\% of the sentences to train the language models while the rest were
+used as test data set. 
+
+The training data set was used to calculate the
+conditinal frobability distributions (one for each model) which in turn were
+used to create the condtional probability distributions using Laplace smoothing
+as described above.
+
+The test data set was used to evaluate the models. We split the test data set to
+bigrams and tigrams. Then we feed the bigrams of each sentence to the
+appropriate model to calculate the log-probability that the model assigns to
+each sentence. These log-probabilities are $logP(W_1^k)$ as described above.
+
+Along with the test dataset we create another dataset consisting of sentences
+created with random words. For each sentence length in the test data set we
+create a sentence of the same length consisting of random words from the
+vocabulary. We also feed these sentences to our models and calculate the
+log-probabilities.
+
+In the scatterplot of figure (figure~\ref{fig:logprob},
+p.~\pageref{fig:logprob}). we present the $logP(w_1^k)$ of each model for the
+test data set and the random data set in comparison to the length of the
+sentence.
+
+As we can see on this diagram, the bigram model assigns higher probabilities to
+the sentences of the test data set compared to the trigram model. This is not
+surprising as on a given vocabulary the possible trigrams are many more than the
+bigrams and given that we use Laplace smoothing much of the frequency is
+distributed to ngrams that do not appear in the training data set.
+
+Also we observe that both models perform equally bad on the randomly generated
+dataset. This is expected too, because randomly selected words do obey to any
+rules of the language that the models are trying to capture, so it makes no
+difference whether the model is bigram or trigram, the produced sentences have
+in general very low probability of appearing in real documents.
+
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{logprob.png}
+  \caption{Log-probability against sentence length}
+  \label{fig:logprob}
+  \end{figure}
+  
+Next we use the language models we trained above in order to generate new
+sentences or autocomplete existing sentences, much like a predictive keyboard.
+To do this we give a seed to each model and request the next most probable word.
+Then we concatenate the seed and the new word and feed the result to the model
+again to get the next most probable word. We repeat this process 30 times to get
+a sentence of lenght 31 words. The result for the bigram and trigram model:
+
+
+\begin{lstlisting}
+Given the seed word "this", the bigram model produced this text of length 10:
+this is a very much more than the commission ' s report on the commission ' s 
+report on the commission ' s report on the commission ' s report on
+
+Given the seed word "this", the trigram model produced this text of length 10:
+this is a very important for the european union , and i would like to thank the
+rapporteur , mr president , i would like to thank the rapporteur , mr
+\end{lstlisting}
+
+We observe that the sentence produced by the trigram model makes much more sense
+than the one created from the bigram model. This can be explained as the trigram
+model contains more context to calculate the most probable word within this
+context. In this case though, both models fall in a loop where they produce the
+same sub-sentence repeatedly.
+
+Finally we need to use the test data set to calculate the cross-entropy and the
+perplexity of each model. The cross-entropy $H()$ of a language $L$
+calculated on a corpus of length $N$ tekens is:
+
+$$
+H(L) = -\frac{1}{N}\log_2{P(w_1^N)}
+$$
+
+And the corresponding perplexity:
+
+$$
+perpexity = 2^{H(L)}
+$$
+
+To calculate the cross-entropy we split the test data set to two large lists of
+bigrams and trigrams. We feed the ngrams to the corresponding data models to
+calculate the log-probability of the whole corpus $\log_2P(w_1^N)$. Then we
+calculate the perplexity. The results are on the table bellow:
+
+\begin{center}
+  \begin{tabular}{ l || c | r }
+    \hline
+      & bigram & trigram \\ \hline
+    cross-entropy & 9.411620691776289 & 11.606417626250623 \\ \hline
+    perplexity & 681.0517857910555 & 3118.0268286943347 \\
+    \hline
+  \end{tabular}
+\end{center}
+
+We observe that the cross-entropy of the bigram model is lower than the one of
+the trigram model. This means that the bigram model is ``better''. This is
+counter-intuitive but can be attributed to the Laplace smoothing which as we
+observed before, punishes more the larger models.
+
+The files for this exercise are in the folder part1. The file ``ex4.py''
+contains the source code which can be executed by issuing the command:
+
+\begin{lstlisting}
+python ex4.py
+\end{lstlisting}
+
+The code has been tested with Python 3.5.2 and the dependencies required are in
+the file requirements.txt
+\end{document}
