@@ -5,6 +5,7 @@ from nltk import downloader, ngrams, FreqDist, download
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.corpus.reader import EuroparlCorpusReader
 from nltk.probability import LaplaceProbDist, ConditionalFreqDist, ConditionalProbDist
+from nltk.metrics.distance import edit_distance
 from nltk.tokenize import word_tokenize
 import matplotlib
 
@@ -16,19 +17,27 @@ def ngrams_sentences(sentences, n):
         ngrams_serntences.append([gram for gram in ngrams(sentence, n)])
     return ngrams_serntences
 
+def word_emited_probability(emited, actual):
+    d = edit_distance(emited, actual)
+    return 1 - (float(edit_distance(emited, actual))/(max(len(emited), len(actual))+1))
+
 def viterbi(sentence, vocabulary, conditional_probability_distribution):
     V = [{}]
     for word in vocabulary:
-        V[0][word] = {'prob': conditional_probability_distribution['start0'].prob(word)}
-
-
+        p1 = conditional_probability_distribution[sentence[0]].prob(word)
+        p2 = word_emited_probability(sentence[0], word)
+        d = edit_distance(u"test", u"rest")
+        V[0][word] = {'prob': conditional_probability_distribution[sentence[0]].prob(word) * word_emited_probability(sentence[0], word)}
+    return V
+    '''
     new_sentences, vk1 = viterbi(sentence[:-1], conditional_probability_distribution)
     v = [conditional_probability_distribution[new_sentence[-1]].max() for new_sentence in new_sentences]
     return new_sentence, v
+    '''
 
 def main():
-    matplotlib.use('Qt5Agg')
-    import matplotlib.pyplot as plt
+    #matplotlib.use('Qt5Agg')
+    #import matplotlib.pyplot as plt
 
     download('punkt')
     # Download and load the english europarl corpus
@@ -36,6 +45,8 @@ def main():
     english = LazyCorpusLoader('europarl_raw/english', EuroparlCorpusReader, r'ep-.*\.en', encoding='utf-8')
 
     words = english.words()
+
+    vocabulary = set(words)
 
     # Calculate the frequency distribution of the words in the corpus
     word_frequency_distribution = FreqDist([word.lower() for word in words])
@@ -58,6 +69,8 @@ def main():
 
     # Calculate the conditional probability distribution for bigrams
     cpd_bigram = ConditionalProbDist(bigrams_fd, LaplaceProbDist, vocabulary_length)
+
+    viterbi(test[0], vocabulary, cpd_bigram)
 
 if __name__ == "__main__":
     main()
