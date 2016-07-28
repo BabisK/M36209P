@@ -1,0 +1,141 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{listings}
+
+\begin{document}
+
+\title{Exercises on text classification}
+\author{Charalampos Kaidos}
+
+\maketitle
+
+\section*{Excercise 17}
+
+We have created a sentiment classification system for tweets using the SEMEVAL
+2016 dataset. We created a program to download tweets for subtask A of task 4.
+Subtask A aims to create a sentiment analysis system with 3 classes:
+``positive'', ``negative'' and ``neutral''. The dataset has 3 parts; the first
+part contains 6000 tweets and is the training data set. The second part has
+2,000 tweets and is the development data set. Finally the third part has another
+2,000 and is the ``dev-test'' dataset. The development dataset is to be used for
+parameter tuning while the dev-test is to evaluate the final model.
+
+Part of the data set was not accessible because tweets have been deleted or made
+private. The final size of the data sets is:
+
+\begin{center}
+  \begin{tabular}{ c | c }
+    \hline
+    dataset & size \\ \hline
+    train & 5128
+    dev & 1712 \\ \hline
+    dev-test & 1699 \\ \hline
+    \hline
+  \end{tabular}
+\end{center}
+
+After downloading the data set, we tokenized the tweets using unigrams, bigrams
+and trigrams and then tranformed them to TF-IDF features. Then we performed SVD
+analysis in order to reduce the dimensions which reached almost 15,000 featues.
+Finally we fed these features to a classifier. We tried 3 classifiers: a
+logistic regression classifier, an SVM and a random tree classifier.
+
+The tokenizer, the TF-IDF transformer, the SVD dimension reductor and the
+classifier where all placed on a pipeline and used grid search to perform
+parameter selection using the ``dev'' dataset for evaluation. In the table
+bellow the options with bold provided the best results and where used
+subsequently.
+
+\begin{center}
+  \begin{tabular} { p{2cm} | p{3cm} | p{3cm} | p{3cm} }
+    \hline
+    parameters & Logistic & ExtraTree & SVM \\ \hline
+    n-grams & unigrams, \textbf{bigrams}, trigrams & unigrams, \textbf{bigrams},
+    trigrams & unigrams, \textbf{bigrams}, trigrams \\ \hline
+    remove stop-words & True, \textbf{False} & True, \textbf{False} &
+    \textbf{True}, False
+    \\
+    \hline to lowercase & True, \textbf{False} & True, \textbf{False} & True,
+    \textbf{False}
+    \\
+    \hline counts & \textbf{tf}, tf-idf & tf, \textbf{tf-idf} & \textbf{tf},
+    tf-idf
+    \\
+    \hline svd components & 700, 900, \textbf{1100}, 1300 & 700, 900,
+    \textbf{1100}, 1300 & 700, 900, \textbf{1100}, 1300 \\ \hline
+    C & \textbf{1}, 0.1, 0.01, 0.001 & & 1, 0.1, \textbf{0.01}, 0.001 \\ \hline
+    penalty & l1, \textbf{l2} & & \\ \hline
+  \end{tabular}
+\end{center}
+
+To calculate the learning curve for each model, cross-validation was used. The
+training data set was split in 3 parts so this was 3-fold training. On each
+iteration, 1/3 was held out. The other 2/3 were split in 5. First, 1/5 was used
+for training. The same 1/5 was fed to the model to predict the class. Also the
+held out 1/3 was fed to the model for prediction too. This was repeated with 2/5
+etc. This way we gathered the data to visualize the learning process of the
+models as shown in figure (figure~\ref{fig:logreg},p.~\pageref{fig:logreg}) for
+Logistic Regression, figure (figure~\ref{fig:tree},p.~\pageref{fig:tree}) for
+Extra Tree and figure (figure~\ref{fig:svm},p.~\pageref{fig:svm}) for the
+Support Vector Machine.
+
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{logreg.png}
+  \caption{Logistic Regression learning curve}
+  \label{fig:logreg}
+  \end{figure}
+  
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{tree.png}
+  \caption{Extra Tree learning curve}
+  \label{fig:tree}
+  \end{figure}
+  
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{svm.png}
+  \caption{Support Vector Machine learning curve}
+  \label{fig:svm}
+  \end{figure}
+  
+As we can see on the figures, the Logistic Regression model has a typical
+learning curve with the train data worsening as more samples are added while the
+curve of the validation data is getting better.
+
+For the other 2 models, we observer that the test data curve is moving as
+expected but the validation data curve is constant which means that the model
+isn't effectively learning the data. We will investigate this further.
+
+Afterwards, the ``dev-test'' dataset was used to evaluate the performance of the
+models. The dataset was fed to the models and we collected the accuracy and F1
+score of each algorithm. The comparison barplots in figures
+(figure~\ref{fig:acc},p.~\pageref{fig:acc}) and
+(figure~\ref{fig:f1},p.~\pageref{fig:f1}) indicate the performance deferences
+between the different models.
+
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{accuracy.png}
+  \caption{Accuracy}
+  \label{fig:acc}
+  \end{figure}
+  
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{f1.png}
+  \caption{F1 score}
+  \label{fig:f1}
+  \end{figure}
+
+On the figures above we observer that the Logistic Regression model performs
+better than the other 2, but all of them can't get accuracy higher than 50\%. As
+we have 3 classes even this accuracy is an improvement over pure guesswork.
+
+\end{document}

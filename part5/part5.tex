@@ -1,0 +1,105 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{listings}
+\lstset{
+    inputencoding=utf8,
+}
+
+\begin{document}
+\title{Ασκήσεις μελέτης της ενότητας «Συντακτική Ανάλυση»}
+\author{Charalampos Kaidos}
+
+\section*{Exercise 9}
+
+For this exercise we have implemented the CYK (Cocke–Younger–Kasami) algorithm
+which is a parser for context-free grammars in CNF (Chomsky Normal Form). The
+CNF is required because it splits the sequencies it examines in half.
+
+It is a dynamic programing algorithm which in its basic form accepts parameters
+that describe the grammar and a sentence and replies whether the sentence
+derives from the grammar. It can easily be extended to costruct syntax and
+dependency trees, which may be more than one for each sentence. Also it can be
+extended to handle probabilistic grammars, which is a form of grammar
+description that contains weights (probabilities) on the production rules.
+
+We have created two implementations; one for CYK and one for probabilistic CYK.
+It dicides on its own whether the grammar contains weights or not and invokes
+the appropriate functions. Both implementations respond whether the given
+sentens belongs to the grammar and print out the parser trees. The application
+reads files from the filesystem where it expects to find grammar in plain text.
+We have included two grammars from the slides, one with weights and one without.
+
+The first grammar, without weights (greek characters missing):
+\begin{lstlisting}
+S -> V NP
+V -> 'θέλω'
+NP -> Det Nominal
+Det -> 'μια'
+Adj -> 'πρωινή'
+V -> 'επιθυμώ'
+Nominal -> Adj Nominal
+Nominal -> 'πτήση'
+Adj -> 'απογευματινή'
+\end{lstlisting}
+
+To execute the program for this grammar (greek characters missing):
+\begin{lstlisting}
+python cky.py -g flight_grammar.grm -s "θέλω μια πρωινή πτήση"
+\end{lstlisting}
+
+And the result (greek characters missing):
+\begin{lstlisting}
+[0] θέλω [1] μια [2] πρωινή [3] πτήση [4]
+[2] Adj [3] Nominal [4] -> [2] Nominal [4]
+[1] Det [2] Nominal [4] -> [1] NP [4]
+[0] V [1] NP [4] -> [0] S [4]
+The sentence is derived from the grammar
+\end{lstlisting}
+
+Here we can see that the sentence is accepted and the syntax tree is printed.
+The format of the syntax tree is bottom up, left hand are children and right
+hand is the parent node.
+
+The second grammar with weights (greek characters missing):
+\begin{lstlisting}
+S -> V NP [0.5]
+NP -> Det Nominal [1]
+Nominal -> Nominal PP [0.2]
+Nominal -> 'σπίτι' [0.2] | 'τζάκι' [0.3] | 'μεσίτη' [0.3]
+PP -> Prep NP [1]
+NPPP -> NP PP [1]
+S -> V NPPP [0.5]
+V -> 'είδαμε' [1]
+Det -> 'το' [1]
+Prep -> 'με' [1]
+\end{lstlisting}
+
+To execute the program for this grammar (greek characters missing):
+\begin{lstlisting}
+python cky.py -g house_grammar.grm -s "είδαμε το σπίτι με το τζάκι"
+\end{lstlisting}
+
+And the result (greek characters missing):
+\begin{lstlisting}
+[0] είδαμε [1] το [2] σπίτι [3] με [4] το [5] τζάκι [6]
+[1] Det:(1.00) [2] Nominal:(0.20) [3] -> [1] NP:(0.20000) [3]
+[4] Det:(1.00) [5] Nominal:(0.30) [6] -> [4] NP:(0.30000) [6]
+[0] V:(1.00) [1] NP:(0.20) [3] -> [0] S:(0.10000) [3]
+[3] Prep:(1.00) [4] NP:(0.30) [6] -> [3] PP:(0.30000) [6]
+[2] Nominal:(0.20) [3] PP:(0.30) [6] -> [2] Nominal:(0.01200) [6]
+[1] Det:(1.00) [2] Nominal:(0.01) [6] -> [1] NP:(0.01200) [6]
+[1] NP:(0.20) [3] PP:(0.30) [6] -> [1] NPPP:(0.06000) [6]
+[0] V:(1.00) [1] NPPP:(0.06) [6] -> [0] S:(0.03000) [6]
+[0] V:(1.00) [1] NP:(0.01) [6] -> [0] S:(0.00600) [6]
+The sentence is derived from the grammar
+\end{lstlisting}
+
+Here we see that beside each node in the tree we see the probability of the
+node. For this sentence there are 2 syntax trees with different probabilities as
+can be observed beside the starting node 'S'.
+\end{document}

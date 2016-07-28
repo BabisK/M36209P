@@ -1,0 +1,9 @@
+S -> V NP
+V -> 'θέλω'
+NP -> Det Nominal
+Det -> 'μια'
+Adj -> 'πρωινή'
+V -> 'επιθυμώ'
+Nominal -> Adj Nominal
+Nominal -> 'πτήση'
+Adj -> 'απογευματινή'
